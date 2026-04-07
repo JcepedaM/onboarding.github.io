@@ -11,6 +11,7 @@ use App\Models\PlantillaSolicitud;
 use App\Models\Solicitud;
 use App\Models\DetalleTecnologia;
 use App\Models\DetalleUniforme;
+use App\Jobs\EnviarNotificacionesProcesoJob;
 use Carbon\Carbon;
 
 class ProcesoIngresoController extends Controller
@@ -134,9 +135,12 @@ public function store(Request $request)
             }
         }
 
+        // 📧 Disparar Job de notificaciones automáticas (HU15)
+        EnviarNotificacionesProcesoJob::dispatch($proceso);
+
         return redirect()
             ->route('procesos-ingreso.index')
-            ->with('success', 'Proceso de ingreso creado correctamente con especificaciones de dotación y tecnología');
+            ->with('success', 'Proceso de ingreso creado correctamente con especificaciones de dotación y tecnología. Se enviarán notificaciones a los responsables de cada área.');
 
     } catch (\Exception $e) {
         // Capturar error y regresar al formulario con mensaje
