@@ -17,6 +17,7 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {{-- Usuario --}}
+                @if($registro->usuario)
                 <div>
                     <p class="text-sm font-semibold text-gray-600 mb-1">👤 Usuario</p>
                     <div class="bg-blue-50 p-4 rounded-lg">
@@ -31,6 +32,14 @@
                         </p>
                     </div>
                 </div>
+                @else
+                <div>
+                    <p class="text-sm font-semibold text-gray-600 mb-1">👤 Usuario</p>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-gray-600">Usuario no disponible</p>
+                    </div>
+                </div>
+                @endif
 
                 {{-- Fecha y Hora --}}
                 <div>

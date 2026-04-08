@@ -38,7 +38,7 @@ try {
         'cargo_id' => $cargo->id,
         'area_id' => $areas->first()->id,
         'fecha_ingreso' => now()->addDays(7),
-        'email' => 'test@example.com',
+        'email' => 'sinergianotificaciones0@gmail.com',
         'telefono' => '3001234567',
         'jefe_id' => 4, // Root user
         'estado' => 'Pendiente',

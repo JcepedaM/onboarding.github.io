@@ -90,6 +90,20 @@
                                    class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
                                     👁️
                                 </a>
+                                
+                                {{-- Botón FINALIZAR TODO (solo Root y Jefe RRHH) --}}
+                                @if(auth()->user()->hasRole(['Root', 'Jefe RRHH']))
+                                    <form method="POST" action="{{ route('solicitudes.finalizar-todas') }}" style="display: inline;" 
+                                          onsubmit="return confirm('¿Estás seguro de que deseas finalizar TODAS las solicitudes de este proceso?');">
+                                        @csrf
+                                        <input type="hidden" name="proceso_ingreso_id" value="{{ $solicitud->proceso_ingreso_id }}">
+                                        <button type="submit" title="Finalizar TODAS las solicitudes del proceso"
+                                                class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 font-bold">
+                                            FINALIZAR TODO
+                                        </button>
+                                    </form>
+                                @endif
+                                
                                 @if($solicitud->estado === 'Pendiente')
                                     <form method="POST" action="{{ route('solicitudes.cambiar-estado', $solicitud->id) }}" style="display: inline;">
                                         @csrf
@@ -167,6 +181,19 @@
                            class="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 text-center font-semibold">
                             👁️ Ver
                         </a>
+                        
+                        {{-- Botón FINALIZAR TODO (solo Root y Jefe RRHH) --}}
+                        @if(auth()->user()->hasRole(['Root', 'Jefe RRHH']))
+                            <form method="POST" action="{{ route('solicitudes.finalizar-todas') }}" class="flex-1"
+                                  onsubmit="return confirm('¿Estás seguro de que deseas finalizar TODAS las solicitudes de este proceso?');">
+                                @csrf
+                                <input type="hidden" name="proceso_ingreso_id" value="{{ $solicitud->proceso_ingreso_id }}">
+                                <button type="submit" class="w-full bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 font-semibold">
+                                    FINALIZAR TODO
+                                </button>
+                            </form>
+                        @endif
+                        
                         @if($solicitud->estado === 'Pendiente')
                             <form method="POST" action="{{ route('solicitudes.cambiar-estado', $solicitud->id) }}" class="flex-1">
                                 @csrf

@@ -117,6 +117,7 @@
                         </thead>
                         <tbody>
                             @foreach($usuariosActivos as $key => $usuario)
+                                @if($usuario->usuario)
                                 <tr style="border-bottom: 1px solid #f0f0f0;">
                                     <td class="p-3 text-gray-700">{{ $key + 1 }}</td>
                                     <td class="p-3 text-gray-700">
@@ -134,6 +135,7 @@
                                         </div>
                                     </td>
                                 </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>
@@ -175,6 +177,7 @@
                     </thead>
                     <tbody>
                         @foreach($ultimosRegistros as $registro)
+                            @if($registro->usuario)
                             <tr style="border-bottom: 1px solid #f0f0f0;">
                                 <td class="p-3 text-gray-700">{{ $registro->usuario->name }}</td>
                                 <td class="p-3 text-gray-700">
@@ -198,6 +201,7 @@
                                     <a href="{{ route('auditoria.show', $registro->id) }}" class="text-blue-600 hover:text-blue-800 font-bold">Ver</a>
                                 </td>
                             </tr>
+                            @endif
                         @endforeach
                     </tbody>
                 </table>

@@ -46,6 +46,7 @@
                     </thead>
                     <tbody>
                         @forelse($registros as $registro)
+                            @if($registro->usuario)
                             <tr style="border-bottom: 1px solid #f0f0f0;">
                                 <td class="p-3 text-gray-700 font-medium">{{ $registro->created_at->format('d/m/Y H:i:s') }}</td>
                                 <td class="p-3 text-gray-700">
@@ -76,6 +77,7 @@
                                     </a>
                                 </td>
                             </tr>
+                            @endif
                         @empty
                             <tr>
                                 <td colspan="6" class="p-6 text-center text-gray-500">

@@ -511,6 +511,73 @@ class SolicitudController extends Controller
     }
 
     /**
+     * Finalizar TODAS las solicitudes de un proceso (solo Root y Jefe RRHH)
+     */
+    public function finalizarTodas(Request $request)
+    {
+        $user = auth()->user();
+        
+        // Solo Root y Jefe RRHH pueden usar esta función
+        if (!$user->hasRole(['Root', 'Jefe RRHH'])) {
+            return back()->withErrors(['error' => 'No tienes permiso para finalizar todas las solicitudes']);
+        }
+        
+        // Validar que se envíe el proceso_ingreso_id
+        $request->validate([
+            'proceso_ingreso_id' => 'required|exists:procesos_ingresos,id',
+        ]);
+        
+        $proceso = ProcesoIngreso::findOrFail($request->proceso_ingreso_id);
+        
+        // Obtener todas las solicitudes del proceso
+        $solicitudes = Solicitud::where('proceso_ingreso_id', $proceso->id)->get();
+        
+        if ($solicitudes->isEmpty()) {
+            return back()->withErrors(['error' => 'No hay solicitudes para finalizar']);
+        }
+        
+        // Finalizar todas las solicitudes
+        foreach ($solicitudes as $solicitud) {
+            $estadoAnterior = $solicitud->estado;
+            $solicitud->update(['estado' => 'Finalizada']);
+            
+            // Log del cambio
+            Log::info("finalizacion_masiva_solicitud", [
+                'solicitud_id' => $solicitud->id,
+                'estado_anterior' => $estadoAnterior,
+                'proceso_id' => $proceso->id,
+                'usuario' => $user->email,
+                'timestamp' => now(),
+            ]);
+            
+            // Enviar notificación
+            try {
+                $this->enviarNotificacionEstado($solicitud, $estadoAnterior, 'Finalizada');
+            } catch (\Exception $e) {
+                Log::warning("notificacion_finalizacion_masiva_failed: {$e->getMessage()}");
+            }
+        }
+        
+        // Marcar el proceso como Finalizado
+        $proceso->update([
+            'estado' => 'Finalizado',
+            'fecha_finalizacion' => now(),
+        ]);
+        
+        // Generar check-in automático
+        $checkin = $this->generarCheckinAutomatico($proceso);
+        if ($checkin) {
+            $mensaje = 'Todas las solicitudes finalizadas y check-in generado automáticamente.';
+        } else {
+            $mensaje = 'Todas las solicitudes finalizadas. El check-in ya estaba generado.';
+        }
+        
+        // Redirigir a procesos-ingreso con mensaje
+        return redirect()->route('procesos-ingreso.index')
+                       ->with('success', $mensaje);
+    }
+
+    /**
      * Enviar notificación de cambio de estado
      */
     /**

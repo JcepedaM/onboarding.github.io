@@ -34,6 +34,7 @@
                 <div class="absolute left-0 md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-600 to-purple-600 transform md:-translate-x-1/2"></div>
 
                 @forelse($registros as $key => $registro)
+                    @if($registro->usuario)
                     <div class="md:grid md:grid-cols-2 gap-8">
                         {{-- Lado Izquierdo (Alternado) --}}
                         @if($key % 2 == 0)
@@ -98,6 +99,7 @@
                             <div class="pr-8 md:pr-0 md:pl-8 md:text-right"></div>
                         @endif
                     </div>
+                    @endif
                 @empty
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center col-span-full">
                         <p class="text-blue-800">No hay eventos en este período</p>

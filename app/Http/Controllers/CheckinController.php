@@ -179,9 +179,15 @@ class CheckinController extends Controller
         $checkin = Checkin::with('procesoIngreso.cargo', 'procesoIngreso.jefe', 'procesoIngreso.area')->findOrFail($id);
         $proceso = $checkin->procesoIngreso;
 
-        // Generar PDF
+        // Generar PDF con márgenes configurados
         $pdf = Pdf::loadView('checkins.pdf', compact('checkin', 'proceso'));
         $pdf->setPaper('A4', 'portrait');
+        $pdf->setOption([
+            'margin-top' => 15,
+            'margin-right' => 15,
+            'margin-bottom' => 15,
+            'margin-left' => 15,
+        ]);
 
         return $pdf->download("acta_entrega_{$proceso->codigo}.pdf");
     }

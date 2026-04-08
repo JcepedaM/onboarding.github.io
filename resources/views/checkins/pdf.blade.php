@@ -14,38 +14,43 @@
             color: #333;
             line-height: 1.6;
             font-size: 12px;
+            margin: 0;
+            padding: 0;
         }
         
         .page {
             width: 100%;
-            padding: 20px;
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 0;
             background: white;
         }
         
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin: 0;
+            padding: 15px;
             border-bottom: 3px solid #0066cc;
-            padding-bottom: 15px;
         }
         
         .header h1 {
             font-size: 20px;
             color: #0066cc;
-            margin-bottom: 5px;
+            margin: 0 0 5px 0;
         }
         
         .header p {
             font-size: 11px;
             color: #666;
+            margin: 0;
         }
         
         .documento-info {
             text-align: right;
             font-size: 10px;
-            margin-bottom: 20px;
+            margin: 15px;
             background-color: #f5f5f5;
-            padding: 10px;
+            padding: 10px 15px;
             border-radius: 5px;
         }
         
@@ -54,16 +59,16 @@
         }
         
         .section {
-            margin-bottom: 20px;
+            margin: 15px;
             page-break-inside: avoid;
         }
         
         .section-title {
             background-color: #0066cc;
             color: white;
-            padding: 8px 12px;
+            padding: 10px 15px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin: 0;
             font-size: 12px;
             border-radius: 3px;
         }
@@ -82,7 +87,7 @@
         .info-col {
             display: table-cell;
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 8px 12px;
             width: 50%;
             font-size: 11px;
         }
@@ -90,24 +95,24 @@
         .info-label {
             font-weight: bold;
             color: #0066cc;
-            width: 40%;
+            width: 35%;
         }
         
         .info-value {
-            width: 60%;
+            width: 65%;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
+            margin: 10px 0;
             font-size: 10px;
         }
         
         th {
             background-color: #e6f2ff;
             border: 1px solid #0066cc;
-            padding: 8px;
+            padding: 10px 8px;
             text-align: left;
             font-weight: bold;
             color: #0066cc;
@@ -115,7 +120,7 @@
         
         td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 8px 10px;
         }
         
         tr:nth-child(even) {
@@ -127,11 +132,11 @@
         }
         
         .firma-section {
-            margin-top: 30px;
-            padding-top: 20px;
+            margin: 30px 15px 15px 15px;
+            padding: 20px 0;
             border-top: 2px solid #ddd;
             display: table;
-            width: 100%;
+            width: calc(100% - 30px);
         }
         
         .firma-item {
@@ -139,15 +144,15 @@
             width: 50%;
             text-align: center;
             font-size: 10px;
-            padding: 10px;
+            padding: 0 15px;
             vertical-align: bottom;
         }
         
         .linea-firma {
             border-top: 1px solid #333;
-            padding-top: 5px;
+            padding-top: 8px;
             font-weight: bold;
-            margin-top: 40px;
+            margin-top: 50px;
         }
         
         .estado-badge {
@@ -172,8 +177,8 @@
             text-align: center;
             font-size: 9px;
             color: #999;
-            margin-top: 20px;
-            padding-top: 10px;
+            margin: 15px;
+            padding: 10px 0;
             border-top: 1px solid #ddd;
         }
     </style>

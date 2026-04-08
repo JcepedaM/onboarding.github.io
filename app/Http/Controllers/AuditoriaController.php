@@ -18,7 +18,7 @@ class AuditoriaController extends Controller
     {
         $this->authorize('viewAny', AuditoriaOnboarding::class);
 
-        $query = AuditoriaOnboarding::with('usuario');
+        $query = AuditoriaOnboarding::with('usuario')->whereNotNull('usuario_id');
 
         if ($request->accion) {
             $query->where('accion', $request->accion);
@@ -94,8 +94,7 @@ class AuditoriaController extends Controller
                                            $query->where('entidad', 'Solicitud')
                                                  ->whereIn('entidad_id', $proceso->solicitudes()->pluck('id'));
                                        })
-                                       ->with('usuario')
-                                       ->orderBy('created_at', 'desc')
+                                       ->with('usuario')                                       ->whereNotNull('usuario_id')                                       ->orderBy('created_at', 'desc')
                                        ->paginate(20);
 
         return view('auditoria.por-proceso', [
@@ -108,7 +107,7 @@ class AuditoriaController extends Controller
     {
         $this->authorize('viewAny', AuditoriaOnboarding::class);
 
-        $query = AuditoriaOnboarding::with('usuario');
+        $query = AuditoriaOnboarding::with('usuario')->whereNotNull('usuario_id');
 
         if ($request->fecha_desde) {
             $query->where('created_at', '>=', $request->fecha_desde);
@@ -170,6 +169,7 @@ class AuditoriaController extends Controller
 
         // Top 10 usuarios más activos
         $usuariosActivos = AuditoriaOnboarding::with('usuario')
+            ->whereNotNull('usuario_id')
             ->select('usuario_id', DB::raw('count(*) as total'))
             ->groupBy('usuario_id')
             ->orderByDesc('total')
@@ -191,6 +191,7 @@ class AuditoriaController extends Controller
 
         // Últimos 10 registros
         $ultimosRegistros = AuditoriaOnboarding::with('usuario')
+            ->whereNotNull('usuario_id')
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
@@ -235,7 +236,7 @@ class AuditoriaController extends Controller
         $this->authorize('viewAny', AuditoriaOnboarding::class);
 
         $entidad = $request->entidad;
-        $query = AuditoriaOnboarding::with('usuario');
+        $query = AuditoriaOnboarding::with('usuario')->whereNotNull('usuario_id');
 
         if ($entidad) {
             $query->where('entidad', $entidad);
@@ -258,6 +259,7 @@ class AuditoriaController extends Controller
 
         $dias = $request->dias ?? 30;
         $registros = AuditoriaOnboarding::with('usuario')
+            ->whereNotNull('usuario_id')
             ->where('created_at', '>=', now()->subDays($dias))
             ->orderBy('created_at', 'desc')
             ->paginate(50);
