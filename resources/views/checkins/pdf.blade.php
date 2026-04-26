@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+class="navbar"<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -25,11 +25,25 @@
             padding: 0;
             background: white;
         }
+
+        .logo-container {
+            text-align: center;
+            margin: 0;
+            padding: 10px 15px 8px 15px;
+            background: white;
+        }
+
+        .logo {
+            max-width: 100%;
+            height: auto;
+            width: 100px;
+            object-fit: contain;
+        }
         
         .header {
             text-align: center;
             margin: 0;
-            padding: 15px;
+            padding: 10px 15px 15px 15px;
             border-bottom: 3px solid #0066cc;
         }
         
@@ -185,6 +199,11 @@
 </head>
 <body>
     <div class="page">
+        <!-- Logo -->
+        <div class="logo-container">
+            <img src="{{ public_path('images/Logo.svg') }}" alt="Logo" class="logo">
+        </div>
+
         <!-- Header -->
         <div class="header">
             <h1>ACTA DE ENTREGA DE ACTIVOS</h1>
@@ -197,8 +216,8 @@
             <p><strong>Código Verificación:</strong> {{ $checkin->codigo_verificacion }}</p>
             <p><strong>Fecha Generación:</strong> {{ now()->format('d/m/Y H:i:s') }}</p>
             <p><strong>Estado:</strong> 
-                <span class="estado-badge {{ $checkin->estado_checkin === 'Completado' ? 'estado-completado' : 'estado-pendiente' }}">
-                    {{ $checkin->estado_checkin }}
+                <span class="estado-badge estado-completado">
+                    Finalizado
                 </span>
             </p>
         </div>
@@ -249,9 +268,8 @@
                                 <td>{{ $activo['item'] ?? '-' }}</td>
                                 <td>{{ $activo['especificaciones'] ?? '-' }}</td>
                                 <td class="centered">
-                                    <span class="estado-badge 
-                                        {{ ($activo['entregado'] ?? false) ? 'estado-completado' : 'estado-pendiente' }}">
-                                        {{ ($activo['entregado'] ?? false) ? 'Entregado' : 'Pendiente' }}
+                                    <span class="estado-badge estado-completado">
+                                        Finalizado
                                     </span>
                                 </td>
                                 <td class="centered">
