@@ -11,7 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Registrar middleware para capturar acceso diario
+        $middleware->web(\App\Http\Middleware\RegisterDailyCheckIn::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

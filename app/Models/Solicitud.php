@@ -10,6 +10,7 @@ class Solicitud extends Model
 
     protected $casts = [
         'fecha_limite' => 'date',
+        'fecha_finalizacion' => 'datetime',
     ];
     protected $fillable = [
         'proceso_ingreso_id',
@@ -17,6 +18,7 @@ class Solicitud extends Model
         'puesto_trabajo_id',
         'tipo',
         'fecha_limite',
+        'fecha_finalizacion',
         'estado',
         'observaciones'
     ];

@@ -8,6 +8,25 @@
         <p class="text-gray-600">Visualiza todos tus accesos registrados en el sistema</p>
     </div>
 
+    <!-- Notificación Informativa -->
+    <div class="mb-8 bg-green-50 border-l-4 border-green-500 p-4 rounded">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-green-700 font-semibold">
+                    ✓ Acceso automático diario activado
+                </p>
+                <p class="text-sm text-green-600 mt-1">
+                    Se registra automáticamente tu <strong>primer acceso de cada día</strong>. Los registros adicionales pueden crearse manualmente desde la sección de bienvenida.
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- Estadísticas Rápidas -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <!-- Total de Accesos -->
@@ -73,8 +92,8 @@
                         <tr class="hover:bg-gray-50 transition">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div>
-                                    <p class="font-semibold text-gray-800">{{ \Carbon\Carbon::parse($acceso->fecha_acceso)->format('d/m/Y') }}</p>
-                                    <p class="text-sm text-gray-600">{{ $acceso->hora_acceso }}</p>
+                                    <p class="font-semibold text-gray-800">{{ $acceso->fecha_acceso->format('d/m/Y') }}</p>
+                                    <p class="text-sm text-gray-600">{{ substr($acceso->hora_acceso, 0, 5) }}</p>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -115,11 +134,11 @@
                         <tr>
                             <td colspan="5" class="px-6 py-8 text-center">
                                 <div class="flex flex-col items-center justify-center">
-                                    <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                    <svg class="w-12 h-12 text-amber-400 mb-3" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
                                     </svg>
-                                    <p class="text-gray-600 font-semibold">No hay accesos registrados</p>
-                                    <p class="text-gray-500 text-sm">Tus accesos aparecerán aquí</p>
+                                    <p class="text-gray-600 font-semibold">No hay accesos registrados aún</p>
+                                    <p class="text-gray-500 text-sm mt-2">Tu primer acceso se registrará automáticamente en tu próximo login</p>
                                 </div>
                             </td>
                         </tr>

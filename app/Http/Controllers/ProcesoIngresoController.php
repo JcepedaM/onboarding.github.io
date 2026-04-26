@@ -97,17 +97,58 @@ public function store(Request $request)
             'estado' => 'Pendiente',
         ]);
 
+        // 📋 Registrar en auditoría la creación del proceso
+        \App\Models\AuditoriaOnboarding::create([
+            'usuario_id' => auth()->id(),
+            'entidad' => 'ProcesoIngreso',
+            'entidad_id' => $proceso->id,
+            'accion' => 'create',
+            'valores_anteriores' => null,
+            'valores_nuevos' => [
+                'codigo' => $codigo,
+                'nombre_completo' => $request->nombre_completo,
+                'documento' => $request->documento,
+                'cargo' => $cargo->nombre,
+                'fecha_ingreso' => $request->fecha_ingreso,
+            ],
+            'ip_origin' => $request->ip(),
+            'motivo' => 'Creación de proceso de ingreso',
+        ]);
+
         // Disparar solicitudes automáticas si existen plantillas
         $plantillas = PlantillaSolicitud::where('cargo_id', $cargo->id)->get();
 
         foreach ($plantillas as $plantilla) {
+            // Estrategia: Usar la fecha más segura (máximo entre: fecha_ingreso - días y hoy + 2 días)
+            // Esto previene solicitudes vencidas si el plazo de ingreso es muy corto
+            $fecha_ingreso = Carbon::parse($request->fecha_ingreso);
+            $fecha_limite_ideal = $fecha_ingreso->copy()->subDays($plantilla->dias_maximos);
+            $fecha_limite_minima = now()->addDays(2);
+            $fecha_limite = $fecha_limite_ideal->lt($fecha_limite_minima) ? $fecha_limite_minima : $fecha_limite_ideal;
+            
             $solicitud = Solicitud::create([
                 'proceso_ingreso_id' => $proceso->id,
                 'area_id' => $plantilla->area_id,
                 'tipo' => $plantilla->tipo_solicitud,
-                'fecha_limite' => Carbon::parse($request->fecha_ingreso)
-                    ->subDays($plantilla->dias_maximos),
+                'fecha_limite' => $fecha_limite,
                 'estado' => 'Pendiente',
+            ]);
+
+            // 📋 Registrar en auditoría la creación de la solicitud
+            \App\Models\AuditoriaOnboarding::create([
+                'usuario_id' => auth()->id(),
+                'entidad' => 'Solicitud',
+                'entidad_id' => $solicitud->id,
+                'accion' => 'create',
+                'valores_anteriores' => null,
+                'valores_nuevos' => [
+                    'tipo' => $plantilla->tipo_solicitud,
+                    'area' => $plantilla->area->nombre,
+                    'fecha_limite' => $solicitud->fecha_limite,
+                    'estado' => 'Pendiente',
+                ],
+                'ip_origin' => $request->ip(),
+                'motivo' => 'Creación automática de solicitud',
             ]);
 
             // Crear detalle de Dotación si es una solicitud de Dotación y se proporcionó información

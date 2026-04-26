@@ -9,6 +9,25 @@
             <p class="text-lg text-gray-600">{{ $usuario->name }}</p>
         </div>
 
+        <!-- Notificación Informativa -->
+        <div class="mb-8 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700 font-semibold">
+                        ℹ️ Tu primer acceso del día fue registrado automáticamente
+                    </p>
+                    <p class="text-sm text-blue-600 mt-1">
+                        El botón <strong>"Ingresar al Sistema"</strong> es opcional y permite registrar accesos manuales adicionales si es necesario.
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <!-- Card Principal de Bienvenida -->
         <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
             <!-- Área del Usuario -->
@@ -87,8 +106,8 @@
                                     <p class="text-sm text-gray-600">{{ $acceso->navegador ?? 'Navegador desconocido' }} • {{ $acceso->ip_address }}</p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="font-semibold text-gray-800">{{ \Carbon\Carbon::parse($acceso->fecha_acceso . ' ' . $acceso->hora_acceso)->format('d/m/Y') }}</p>
-                                    <p class="text-sm text-gray-600">{{ \Carbon\Carbon::parse($acceso->hora_acceso)->format('H:i') }}</p>
+                                    <p class="font-semibold text-gray-800">{{ $acceso->fecha_acceso->format('d/m/Y') }}</p>
+                                    <p class="text-sm text-gray-600">{{ substr($acceso->hora_acceso, 0, 5) }}</p>
                                 </div>
                             </div>
                         @endforeach
@@ -101,15 +120,15 @@
         <div class="flex gap-4">
             <form id="formCheckIn" action="{{ route('checkin-acceso.procesar') }}" method="POST" class="flex-1">
                 @csrf
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-lg transition transform hover:scale-105 flex items-center justify-center gap-2">
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition transform hover:scale-105 flex items-center justify-center gap-2">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    Ingresar al Sistema - {{ $area->nombre ?? 'Sistema' }}
+                    Registrar Acceso Adicional (Opcional)
                 </button>
             </form>
             
-            <a href="{{ route('checkin-acceso.historial') }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-4 px-6 rounded-lg transition flex items-center justify-center gap-2">
+            <a href="{{ route('checkin-acceso.historial') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition flex items-center justify-center gap-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>

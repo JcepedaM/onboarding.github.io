@@ -466,10 +466,17 @@ class SolicitudController extends Controller
         $estadoAnterior = $solicitud->estado;
         $estadoNuevo = $request->estado;
 
-        $solicitud->update([
+        $updateData = [
             'estado' => $estadoNuevo,
             'observaciones' => $request->observaciones,
-        ]);
+        ];
+
+        // Guardar fecha de finalización cuando se marca como Finalizada
+        if ($estadoNuevo === 'Finalizada') {
+            $updateData['fecha_finalizacion'] = now();
+        }
+
+        $solicitud->update($updateData);
 
         // Log del cambio de estado
         \Illuminate\Support\Facades\Log::info("cambio_estado_solicitud", [
@@ -539,7 +546,10 @@ class SolicitudController extends Controller
         // Finalizar todas las solicitudes
         foreach ($solicitudes as $solicitud) {
             $estadoAnterior = $solicitud->estado;
-            $solicitud->update(['estado' => 'Finalizada']);
+            $solicitud->update([
+                'estado' => 'Finalizada',
+                'fecha_finalizacion' => now(),
+            ]);
             
             // Log del cambio
             Log::info("finalizacion_masiva_solicitud", [
@@ -933,21 +943,25 @@ class SolicitudController extends Controller
         $puesto->save();
 
         // Registrar en auditoría
-        \App\Models\AuditoriaOnboarding::create([
-            'usuario_id' => auth()->id(),
-            'proceso_ingreso_id' => $solicitud->proceso_ingreso_id,
-            'accion' => 'Reserva de Puesto de Trabajo',
-            'descripcion' => "Puesto {$puesto->numero_puesto} (Piso {$puesto->piso}, Sección {$puesto->seccion}) asignado a solicitud {$solicitud->id}",
-            'tabla_afectada' => 'solicitudes',
-            'registro_id' => $solicitud->id,
-            'datos_anteriores' => null,
-            'datos_nuevos' => [
-                'puesto_trabajo_id' => $puesto->id,
-                'puesto_numero' => $puesto->numero_puesto,
-                'fecha_asignacion' => now(),
-            ],
-            'ip_usuario' => $request->ip(),
-        ]);
+        try {
+            \App\Models\AuditoriaOnboarding::create([
+                'usuario_id' => auth()->id(),
+                'accion' => 'Reserva de Puesto de Trabajo',
+                'entidad' => 'Solicitud',
+                'entidad_id' => $solicitud->id,
+                'motivo' => "Puesto {$puesto->numero_puesto} (Piso {$puesto->piso}, Sección {$puesto->seccion}) asignado",
+                'valores_anteriores' => ['puesto_trabajo_id' => null],
+                'valores_nuevos' => [
+                    'puesto_trabajo_id' => $puesto->id,
+                    'puesto_numero' => $puesto->numero_puesto,
+                    'fecha_asignacion' => now()->format('Y-m-d H:i:s'),
+                ],
+                'ip_origin' => $request->ip(),
+            ]);
+        } catch (\Exception $e) {
+            // Si falla la auditoría, no impedir la operación principal
+            \Log::warning('Error registrando auditoría en reservarPuesto: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,

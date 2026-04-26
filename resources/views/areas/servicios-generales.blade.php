@@ -65,7 +65,7 @@
                                     @if($puesto->estado === 'En Mantenimiento' || !$puesto->estaDisponible()) disabled @endif
                                     title="@if($puesto->estaDisponible())Disponible @else Ocupado - {{ $puesto->empleadoActual()?->solicitud?->proceso?->nombre_completo }} @endif">
                                     {{ $puesto->numero_puesto }}
-                                    @if($puesto->descripc≈ion)
+                                    @if($puesto->descripcion)
                                         <div class="text-xs mt-1">{{ $puesto->descripcion }}</div>
                                     @endif
                                 </button>

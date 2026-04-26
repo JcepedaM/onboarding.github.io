@@ -45,7 +45,7 @@ class PuestoTrabajo extends Model
      */
     public function solicitudes()
     {
-        return $this->hasMany(SolicitudServiciosGenerales::class);
+        return $this->hasMany(Solicitud::class, 'puesto_trabajo_id');
     }
 
     /**

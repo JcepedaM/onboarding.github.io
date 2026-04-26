@@ -68,12 +68,18 @@ class ProcesoIngresoSeeder extends Seeder
             $plantillas = PlantillaSolicitud::where('cargo_id', $cargo->id)->get();
 
             foreach ($plantillas as $plantilla) {
+                // Estrategia: Usar la fecha más segura (máximo entre: fecha_ingreso - días y hoy + 2 días)
+                // Esto previene solicitudes vencidas si el plazo de ingreso es muy corto
+                $fecha_ingreso = Carbon::parse($proceso->fecha_ingreso);
+                $fecha_limite_ideal = $fecha_ingreso->copy()->subDays($plantilla->dias_maximos);
+                $fecha_limite_minima = now()->addDays(2);
+                $fecha_limite = $fecha_limite_ideal->lt($fecha_limite_minima) ? $fecha_limite_minima : $fecha_limite_ideal;
+                
                 Solicitud::create([
                     'proceso_ingreso_id' => $proceso->id,
                     'area_id' => $plantilla->area_id,
                     'tipo' => $plantilla->tipo_solicitud,
-                    'fecha_limite' => Carbon::parse($proceso->fecha_ingreso)
-                        ->subDays($plantilla->dias_maximos),
+                    'fecha_limite' => $fecha_limite,
                     'estado' => 'Pendiente',
                 ]);
             }

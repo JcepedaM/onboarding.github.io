@@ -96,6 +96,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/dashboard', [AuditoriaController::class, 'dashboard'])
             ->name('dashboard');
 
+        // Endpoint AJAX para actualización en tiempo real
+        Route::get('/datos/actualizados', [AuditoriaController::class, 'obtenerDatosActualizados'])
+            ->name('datos-actualizados');
+
         Route::get('/{auditoria}', [AuditoriaController::class, 'show'])
             ->name('show');
         
@@ -120,6 +124,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // MÓDULO DE CHECK-IN DE ACCESOS (HU11) - ACCESO SEGURO AL SISTEMA
     Route::prefix('checkin-acceso')->name('checkin-acceso.')->group(function () {
+        
+        // Ruta base: redirigir a bienvenida
+        Route::get('', fn() => redirect()->route('checkin-acceso.mostrar-bienvenida'))
+            ->name('index');
         
         // Pantalla de Bienvenida (Mostrar al usuario)
         Route::get('/bienvenida', [CheckInAccesoController::class, 'mostrarBienvenida'])

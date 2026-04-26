@@ -46,7 +46,11 @@
                 <h3 class="text-lg font-bold mb-4">Información de la Solicitud</h3>
                 <p><strong>Área Responsable:</strong> {{ optional($solicitude->area)->nombre ?? '—' }}</p>
                 <p><strong>Tipo de Solicitud:</strong> {{ $solicitude->tipo }}</p>
-                <p><strong>Fecha Límite:</strong> {{ optional($solicitude->fecha_limite)->format('d/m/Y') ?? '—' }}</p>
+                @if($solicitude->estado === 'Finalizada' && $solicitude->fecha_finalizacion)
+                    <p><strong>Finalizada el:</strong> {{ optional($solicitude->fecha_finalizacion)->format('d/m/Y H:i') ?? '—' }}</p>
+                @else
+                    <p><strong>Fecha Límite:</strong> {{ optional($solicitude->fecha_limite)->format('d/m/Y') ?? '—' }}</p>
+                @endif
                 <p>
                     <strong>Estado:</strong> 
                     <span class="px-3 py-1 rounded text-white text-sm font-bold

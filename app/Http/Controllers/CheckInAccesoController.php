@@ -69,7 +69,7 @@ class CheckInAccesoController extends Controller
             accion: 'check-in',
             entidad: 'CheckInAcceso',
             entidadId: $checkIn->id,
-            motivo: "Usuario ingresó al sistema - Área: {$usuario->area->nombre}",
+            motivo: "Usuario ingresó al sistema - Área: " . ($usuario->area?->nombre ?? 'Sin Área'),
             valoresNuevos: $checkIn->toArray()
         );
 

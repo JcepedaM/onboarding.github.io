@@ -34,12 +34,6 @@ class CheckinController extends Controller
             'solicitudes.cursos'
         ])->findOrFail($procesoId);
 
-        $existente = Checkin::where('proceso_ingreso_id', $proceso->id)->first();
-        if ($existente) {
-            return redirect()->route('checkins.show', $existente->id)
-                ->with('success', 'El check-in ya estaba generado.');
-        }
-
         // Verificar que todas las solicitudes estén finalizadas
         if ($proceso->solicitudes()->where('estado', '!=', 'Finalizada')->exists()) {
             return back()->withErrors(['error' => 'No todas las solicitudes están finalizadas']);

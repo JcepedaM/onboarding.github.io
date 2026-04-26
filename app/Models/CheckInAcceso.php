@@ -27,7 +27,6 @@ class CheckInAcceso extends Model
 
     protected $casts = [
         'fecha_acceso' => 'date',
-        'hora_acceso' => 'time',
     ];
 
     /**

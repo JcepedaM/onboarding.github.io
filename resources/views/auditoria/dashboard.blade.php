@@ -18,7 +18,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-semibold">Total de Registros</p>
-                        <p class="text-3xl font-bold text-blue-600 mt-2">{{ $totalRegistros }}</p>
+                        <p class="text-3xl font-bold text-blue-600 mt-2" data-stat-type="total">{{ $totalRegistros }}</p>
                     </div>
                     <svg class="w-12 h-12 text-blue-100" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
@@ -32,7 +32,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-semibold">Registros Hoy</p>
-                        <p class="text-3xl font-bold text-green-600 mt-2">{{ $registrosHoy }}</p>
+                        <p class="text-3xl font-bold text-green-600 mt-2" data-stat-type="hoy">{{ $registrosHoy }}</p>
                     </div>
                     <svg class="w-12 h-12 text-green-100" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
@@ -45,7 +45,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-semibold">Esta Semana</p>
-                        <p class="text-3xl font-bold text-yellow-600 mt-2">{{ $registrosEstaSemanagento }}</p>
+                        <p class="text-3xl font-bold text-yellow-600 mt-2" data-stat-type="semana">{{ $registrosEstaSemanagento }}</p>
                     </div>
                     <svg class="w-12 h-12 text-yellow-100" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.3A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L11 9.414V13H5.5z"></path>
@@ -58,7 +58,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-semibold">Este Mes</p>
-                        <p class="text-3xl font-bold text-purple-600 mt-2">{{ $registrosEsteMes }}</p>
+                        <p class="text-3xl font-bold text-purple-600 mt-2" data-stat-type="mes">{{ $registrosEsteMes }}</p>
                     </div>
                     <svg class="w-12 h-12 text-purple-100" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"></path>
@@ -70,9 +70,9 @@
         {{-- Gráficos y tablas --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             {{-- Acciones Más Frecuentes --}}
-            <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="bg-white rounded-lg shadow-md p-6" id="accionesFreuentesContainer">
                 <h3 class="text-lg font-bold text-gray-800 mb-4">🔍 Acciones Más Frecuentes</h3>
-                <div class="space-y-3">
+                <div class="space-y-3" id="accionesFreuentesContent">
                     @foreach($accionesFrequentes as $accion)
                         <div class="flex items-center justify-between">
                             <div class="flex-1">
@@ -88,9 +88,9 @@
             </div>
 
             {{-- Entidades Más Modificadas --}}
-            <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="bg-white rounded-lg shadow-md p-6" id="entidadesModificadasContainer">
                 <h3 class="text-lg font-bold text-gray-800 mb-4">📝 Entidades Más Modificadas</h3>
-                <div class="space-y-3">
+                <div class="space-y-3" id="entidadesModificadasContent">
                     @foreach($entidadesModificadas as $entidad)
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <span class="font-medium text-gray-700">{{ $entidad->entidad }}</span>
@@ -209,3 +209,167 @@
         </div>
     </div>
 </x-app-layout>
+
+<script>
+// Sistema de actualización en tiempo real para el dashboard de auditoría
+document.addEventListener('DOMContentLoaded', function() {
+    // Configuración
+    const intervalMs = 10000; // 10 segundos
+    const apiEndpoint = "{{ route('auditoria.datos-actualizados') }}";
+    
+    // Crear indicador de estado
+    const statusIndicator = document.createElement('div');
+    statusIndicator.id = 'realtimeStatus';
+    statusIndicator.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 8px 16px; background: #10b981; color: white; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 1000; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+    statusIndicator.innerHTML = '🔄 Actualizando en tiempo real...';
+    document.body.appendChild(statusIndicator);
+    
+    // Función para actualizar datos
+    function actualizarDatos() {
+        fetch(apiEndpoint)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) throw new Error('Error en los datos');
+                
+                const datos = data.datos;
+                
+                // Actualizar timestamp en el indicador
+                const ahora = new Date().toLocaleTimeString('es-ES');
+                statusIndicator.innerHTML = `✓ Actualizado ${ahora}`;
+                statusIndicator.style.background = '#10b981';
+                
+                // Actualizar tarjetas de estadísticas
+                document.querySelectorAll('[data-stat-type="total"]').forEach(el => {
+                    if (el.textContent != datos.totalRegistros) {
+                        el.textContent = datos.totalRegistros;
+                        el.style.animation = 'pulse 0.5s ease-in-out';
+                    }
+                });
+                
+                document.querySelectorAll('[data-stat-type="hoy"]').forEach(el => {
+                    if (el.textContent != datos.registrosHoy) {
+                        el.textContent = datos.registrosHoy;
+                        el.style.animation = 'pulse 0.5s ease-in-out';
+                    }
+                });
+                
+                document.querySelectorAll('[data-stat-type="semana"]').forEach(el => {
+                    if (el.textContent != datos.registrosEstaSemanagento) {
+                        el.textContent = datos.registrosEstaSemanagento;
+                        el.style.animation = 'pulse 0.5s ease-in-out';
+                    }
+                });
+                
+                document.querySelectorAll('[data-stat-type="mes"]').forEach(el => {
+                    if (el.textContent != datos.registrosEsteMes) {
+                        el.textContent = datos.registrosEsteMes;
+                        el.style.animation = 'pulse 0.5s ease-in-out';
+                    }
+                });
+                
+                // Actualizar tabla de últimos registros
+                const tbody = document.querySelector('table tbody');
+                if (tbody) {
+                    actualizarTabla(tbody, datos.ultimosRegistros);
+                }
+                
+                // Actualizar acciones frecuentes
+                const accionesDiv = document.getElementById('accionesFreuentesContent');
+                if (accionesDiv) {
+                    actualizarAccionesFrequentes(accionesDiv, datos.accionesFrequentes, datos.totalRegistros);
+                }
+                
+                // Actualizar entidades modificadas
+                const entidadesDiv = document.getElementById('entidadesModificadasContent');
+                if (entidadesDiv) {
+                    actualizarEntidades(entidadesDiv, datos.entidadesModificadas);
+                }
+            })
+            .catch(error => {
+                console.error('Error actualizando datos:', error);
+                statusIndicator.innerHTML = '⚠️ Error en actualización';
+                statusIndicator.style.background = '#ef4444';
+            });
+    }
+    
+    // Actualizar tabla
+    function actualizarTabla(tbody, registros) {
+        let html = '';
+        const accionesMap = {
+            'create': { clase: 'bg-green-100 text-green-800', texto: 'Creación' },
+            'update': { clase: 'bg-blue-100 text-blue-800', texto: 'Actualización' },
+            'delete': { clase: 'bg-red-100 text-red-800', texto: 'Eliminación' },
+            'notificacion_enviada': { clase: 'bg-orange-100 text-orange-800', texto: 'Notificación Enviada' },
+            'notificacion_fallida': { clase: 'bg-red-100 text-red-800', texto: 'Notificación Fallida' },
+        };
+        
+        registros.forEach(registro => {
+            const accion = accionesMap[registro.accion] || { clase: 'bg-gray-100 text-gray-800', texto: registro.accion };
+            html += `
+                <tr style="border-bottom: 1px solid #f0f0f0;">
+                    <td class="p-3 text-gray-700">${registro.usuario}</td>
+                    <td class="p-3 text-gray-700">
+                        <span class="px-2 py-1 ${accion.clase} rounded text-xs font-bold">${accion.texto}</span>
+                    </td>
+                    <td class="p-3 text-gray-700 font-semibold">${registro.entidad}</td>
+                    <td class="p-3 text-gray-600">${registro.fecha}</td>
+                    <td class="p-3 text-center">
+                        <a href="/auditoria/${registro.id}" class="text-blue-600 hover:text-blue-800 font-bold text-sm">Ver</a>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html || '<tr><td colspan="5" class="p-6 text-center text-gray-500">No hay registros</td></tr>';
+    }
+    
+    // Actualizar acciones frecuentes
+    function actualizarAccionesFrequentes(container, acciones, total) {
+        let html = '';
+        acciones.forEach(accion => {
+            const porcentaje = Math.min((accion.total / total) * 100, 100);
+            html += `
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-700">${accion.accion}</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: ${porcentaje}%"></div>
+                        </div>
+                    </div>
+                    <span class="ml-4 text-sm font-bold text-gray-800">${accion.total}</span>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+    
+    // Actualizar entidades
+    function actualizarEntidades(container, entidades) {
+        let html = '';
+        entidades.forEach(entidad => {
+            html += `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span class="font-medium text-gray-700">${entidad.entidad}</span>
+                    <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-bold">${entidad.total}</span>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+    
+    // Iniciar actualización periódica
+    actualizarDatos(); // Primera ejecución inmediata
+    setInterval(actualizarDatos, intervalMs);
+    
+    // Agregar estilos de animación
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>

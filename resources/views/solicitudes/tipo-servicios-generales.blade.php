@@ -54,7 +54,11 @@
                     <div class="bg-white rounded-lg shadow p-6" style="border-left: 4px solid #C59D42;">
                         <h3 class="text-lg font-bold mb-4" style="color: #C59D42;">📊 Estado</h3>
                         <p class="text-2xl font-bold text-center" style="color: #C59D42;">{{ $solicitude->estado }}</p>
-                        <p class="text-sm text-gray-600 text-center mt-3">{{ $solicitude->fecha_limite?->format('d/m/Y') ?? 'N/A' }}</p>
+                        @if($solicitude->estado === 'Finalizada' && $solicitude->fecha_finalizacion)
+                            <p class="text-sm text-gray-600 text-center mt-3">{{ $solicitude->fecha_finalizacion?->format('d/m/Y H:i') ?? 'N/A' }}</p>
+                        @else
+                            <p class="text-sm text-gray-600 text-center mt-3">{{ $solicitude->fecha_limite?->format('d/m/Y') ?? 'N/A' }}</p>
+                        @endif
                     </div>
                 </div>
 
@@ -139,8 +143,8 @@
                             </div>
 
                             <!-- Canvas del Plano -->
-                            <div class="border rounded-lg p-6 bg-gray-50 overflow-auto" style="min-height: 400px;">
-                                <canvas id="canvas-plano" width="800" height="400"></canvas>
+                            <div class="border rounded-lg p-6 bg-gray-50 overflow-auto flex items-center justify-center" style="min-height: 600px;">
+                                <canvas id="canvas-plano" width="800" height="500" style="max-width: 100%; height: auto;"></canvas>
                             </div>
 
                             <!-- Input Oculto para Puesto Seleccionado -->
@@ -221,24 +225,46 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById('canvas-plano');
-    if (!canvas) return;
+    if (!canvas) {
+        console.error('Canvas no encontrado');
+        return;
+    }
 
     const ctx = canvas.getContext('2d');
     let puestosData = [];
     let puestoSeleccionado = null;
     const solicitudId = {{ $solicitude->id }};
     const puestoActualId = {{ $solicitude->puesto_trabajo_id ?? 'null' }};
+    let clickHandlerAttached = false;
+
+    console.log('Inicializando plano interactivo');
 
     // Cargar datos de puestos
     async function cargarPuestos() {
         try {
+            console.log('Cargando puestos desde API...');
             const response = await fetch('{{ route("api.puestos.plano") }}');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
+            console.log('Datos recibidos:', data);
+            
+            if (!data.puestos || !Array.isArray(data.puestos)) {
+                throw new Error('Formato de datos inválido');
+            }
+            
             puestosData = data.puestos;
+            console.log(`Se cargaron ${puestosData.length} puestos`);
             
             // Llenar selectores de filtro
             const pisos = [...new Set(puestosData.map(p => p.piso))].sort((a, b) => a - b);
             const secciones = [...new Set(puestosData.map(p => p.seccion).filter(Boolean))].sort();
+            
+            console.log('Pisos:', pisos);
+            console.log('Secciones:', secciones);
             
             const filtroPiso = document.getElementById('filtro-piso');
             const filtroSeccion = document.getElementById('filtro-seccion');
@@ -257,17 +283,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 filtroSeccion.appendChild(option);
             });
             
+            // Agregar event listeners a los filtros
+            filtroPiso.addEventListener('change', dibujarPlano);
+            filtroSeccion.addEventListener('change', dibujarPlano);
+            
             dibujarPlano();
         } catch (error) {
             console.error('Error cargando puestos:', error);
-            ctx.fillStyle = '#E74C3C';
-            ctx.font = '16px Arial';
-            ctx.fillText('Error cargando el plano', 50, 50);
+            mostrarError(`Error cargando los puestos: ${error.message}`);
         }
+    }
+
+    // Mostrar error en canvas
+    function mostrarError(mensaje) {
+        ctx.fillStyle = '#FFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#E74C3C';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(mensaje, canvas.width / 2, canvas.height / 2);
     }
 
     // Dibujar plano
     function dibujarPlano() {
+        if (puestosData.length === 0) {
+            console.warn('No hay datos de puestos para dibujar');
+            return;
+        }
+
+        console.log('Dibujando plano...');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         // Fondo
@@ -291,12 +336,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let posX = padding;
         let posY = padding;
-        let maxHeight = 0;
+        let contadoPuestos = 0;
 
-        puestosData.forEach((puesto, index) => {
+        puestosData.forEach((puesto) => {
             // Aplicar filtros
             if (filtroActivoPiso && puesto.piso !== filtroActivoPiso) return;
             if (filtroActivoSeccion && puesto.seccion !== filtroActivoSeccion) return;
+
+            contadoPuestos++;
 
             // Salto de línea
             if (posX + puestoAncho + espacioX > canvas.width - padding) {
@@ -305,24 +352,35 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // Determinar color según estado
-            let color = '#28A745'; // Disponible
-            if (puesto.estado === 'Asignado') color = '#E74C3C';
-            else if (puesto.estado === 'En Mantenimiento') color = '#95A5A6';
-            else if (puesto.estado === 'Bloqueado') color = '#34495E';
-            else if (puesto.estado === 'Reservado') color = '#FFC107';
+            let color = '#28A745'; // Disponible - Verde
+            if (puesto.estado === 'Asignado') color = '#E74C3C'; // Rojo
+            else if (puesto.estado === 'En Mantenimiento') color = '#95A5A6'; // Gris
+            else if (puesto.estado === 'Bloqueado') color = '#34495E'; // Oscuro
+            else if (puesto.estado === 'Reservado') color = '#FFC107'; // Amarillo
 
-            // Dibujar puesto
-            ctx.fillStyle = puestoSeleccionado && puestoSeleccionado.id === puesto.id ? '#3498DB' : color;
+            // Si está seleccionado, cambiar a azul
+            if (puestoSeleccionado && puestoSeleccionado.id === puesto.id) {
+                color = '#3498DB';
+            }
+
+            // Dibujar puesto con sombra
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            
+            ctx.fillStyle = color;
             ctx.fillRect(posX, posY, puestoAncho, puestoAlto);
 
             // Borde
+            ctx.shadowColor = 'transparent';
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 2;
             ctx.strokeRect(posX, posY, puestoAncho, puestoAlto);
 
             // Texto
             ctx.fillStyle = '#FFF';
-            ctx.font = 'bold 14px Arial';
+            ctx.font = 'bold 12px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(puesto.numero_puesto, posX + puestoAncho / 2, posY + puestoAlto / 2);
@@ -334,24 +392,35 @@ document.addEventListener('DOMContentLoaded', function() {
             puesto.canvasAlto = puestoAlto;
 
             posX += puestoAncho + espacioX;
-            maxHeight = Math.max(maxHeight, posY + puestoAlto);
         });
 
-        // Configurar evento de click
-        canvas.addEventListener('click', handleCanvasClick);
+        console.log(`Se dibujaron ${contadoPuestos} puestos`);
+
+        // Agregar listener de click solo una vez
+        if (!clickHandlerAttached) {
+            canvas.addEventListener('click', handleCanvasClick);
+            clickHandlerAttached = true;
+            console.log('Event listener de click agregado al canvas');
+        }
     }
 
     function handleCanvasClick(e) {
         const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
 
-        puestosData.forEach(puesto => {
+        console.log(`Click en canvas: x=${x}, y=${y} (escala: ${scaleX.toFixed(2)}x${scaleY.toFixed(2)})`);
+
+        for (let puesto of puestosData) {
             if (puesto.canvasX && 
                 x >= puesto.canvasX && 
                 x <= puesto.canvasX + puesto.canvasAncho &&
                 y >= puesto.canvasY && 
                 y <= puesto.canvasY + puesto.canvasAlto) {
+                
+                console.log(`Click en puesto: ${puesto.numero_puesto}, estado: ${puesto.estado}`);
                 
                 // Solo permitir seleccionar disponibles
                 if (puesto.estado === 'Disponible') {
@@ -369,9 +438,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('btn-limpiar-seleccion').style.display = 'inline-block';
                     
                     dibujarPlano();
+                    console.log('Puesto seleccionado:', puesto);
+                } else {
+                    alert(`❌ Este puesto no está disponible (${puesto.estado})`);
                 }
+                break;
             }
-        });
+        }
     }
 
     // Botones
@@ -382,6 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
+            console.log('Confirmando puesto:', puestoSeleccionado);
             const response = await fetch(`{{ route('api.puestos.reservar', ['id' => 'ID']) }}`.replace('ID', puestoSeleccionado.id), {
                 method: 'POST',
                 headers: {
@@ -394,9 +468,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             const data = await response.json();
+            console.log('Respuesta del servidor:', data);
             
             if (data.success) {
-                // Mostrar éxito y recargar
                 alert('✅ ' + data.message);
                 window.location.reload();
             } else {
@@ -404,12 +478,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 dibujarPlano();
             }
         } catch (error) {
-            console.error('Error:', error);
-            alert('Error al guardar la selección');
+            console.error('Error al confirmar puesto:', error);
+            alert('❌ Error al guardar la selección: ' + error.message);
         }
     });
 
     document.getElementById('btn-limpiar-seleccion').addEventListener('click', function() {
+        console.log('Limpiando selección');
         puestoSeleccionado = null;
         document.getElementById('puesto-seleccionado').value = '';
         document.getElementById('info-puesto-seleccionado').style.display = 'none';
@@ -417,9 +492,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('btn-limpiar-seleccion').style.display = 'none';
         dibujarPlano();
     });
-
-    document.getElementById('filtro-piso').addEventListener('change', dibujarPlano);
-    document.getElementById('filtro-seccion').addEventListener('change', dibujarPlano);
 
     // Cargar puestos al iniciar
     cargarPuestos();

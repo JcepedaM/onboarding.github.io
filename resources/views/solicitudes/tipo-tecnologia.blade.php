@@ -60,7 +60,11 @@
                             <p class="text-2xl font-bold" style="color: #428FFF;">{{ $solicitude->estado }}</p>
                         </div>
                         <div class="text-sm text-gray-600 space-y-2">
-                            <p><strong>Fecha Límite:</strong> {{ $solicitude->fecha_limite?->format('d/m/Y') ?? 'N/A' }}</p>
+                            @if($solicitude->estado === 'Finalizada' && $solicitude->fecha_finalizacion)
+                                <p><strong>Finalizada el:</strong> {{ $solicitude->fecha_finalizacion?->format('d/m/Y H:i') ?? 'N/A' }}</p>
+                            @else
+                                <p><strong>Fecha Límite:</strong> {{ $solicitude->fecha_limite?->format('d/m/Y') ?? 'N/A' }}</p>
+                            @endif
                             <p><strong>Creada:</strong> {{ $solicitude->created_at->format('d/m/Y') }}</p>
                         </div>
                     </div>

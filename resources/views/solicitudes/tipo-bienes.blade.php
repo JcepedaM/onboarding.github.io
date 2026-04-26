@@ -54,7 +54,11 @@
                     <div class="bg-white rounded-lg shadow p-6" style="border-left: 4px solid #C59D42;">
                         <h3 class="text-lg font-bold mb-4" style="color: #C59D42;">📊 Estado</h3>
                         <p class="text-2xl font-bold text-center" style="color: #C59D42;">{{ $solicitude->estado }}</p>
-                        <p class="text-sm text-gray-600 text-center mt-3">{{ $solicitude->fecha_limite?->format('d/m/Y') ?? 'N/A' }}</p>
+                        @if($solicitude->estado === 'Finalizada' && $solicitude->fecha_finalizacion)
+                            <p class="text-sm text-gray-600 text-center mt-3">{{ $solicitude->fecha_finalizacion?->format('d/m/Y H:i') ?? 'N/A' }}</p>
+                        @else
+                            <p class="text-sm text-gray-600 text-center mt-3">{{ $solicitude->fecha_limite?->format('d/m/Y') ?? 'N/A' }}</p>
+                        @endif
                     </div>
                 </div>
 

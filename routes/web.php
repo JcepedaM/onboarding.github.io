@@ -41,7 +41,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/cargos', [CargoController::class, 'index'])->name('cargos.index');
     Route::patch('/cargos/{cargo}/estado', [CargoController::class, 'actualizarEstado'])->name('cargos.estado');
 
-    // API para obtener puestos (deprecated)
+    // API para obtener puestos
+    Route::get('/api/puestos/plano', [SolicitudController::class, 'obtenerPuestosPlano'])->name('api.puestos.plano');
+    Route::post('/api/puestos/{id}/reservar', [SolicitudController::class, 'reservarPuesto'])->name('api.puestos.reservar');
 
     // SOLICITUDES - Módulo completo de solicitudes por área
     Route::resource('solicitudes', SolicitudController::class);

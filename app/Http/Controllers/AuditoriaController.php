@@ -269,4 +269,66 @@ class AuditoriaController extends Controller
             'dias' => $dias,
         ]);
     }
+
+    /**
+     * Endpoint AJAX para obtener datos actualizados en tiempo real
+     * Retorna estadísticas y últimos registros en formato JSON
+     */
+    public function obtenerDatosActualizados(Request $request)
+    {
+        $this->authorize('viewAny', AuditoriaOnboarding::class);
+
+        // Estadísticas generales
+        $totalRegistros = AuditoriaOnboarding::count();
+        $registrosHoy = AuditoriaOnboarding::whereDate('created_at', today())->count();
+        $registrosEstaSemanagento = AuditoriaOnboarding::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
+        $registrosEsteMes = AuditoriaOnboarding::whereMonth('created_at', now()->month)->count();
+
+        // Últimos 10 registros para actualizar en tiempo real
+        $ultimosRegistros = AuditoriaOnboarding::with('usuario')
+            ->whereNotNull('usuario_id')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($registro) {
+                return [
+                    'id' => $registro->id,
+                    'usuario' => $registro->usuario ? $registro->usuario->name : 'Sistema',
+                    'email' => $registro->usuario ? $registro->usuario->email : '-',
+                    'accion' => $registro->accion,
+                    'entidad' => $registro->entidad,
+                    'entidad_id' => $registro->entidad_id,
+                    'fecha' => $registro->created_at->format('d/m/Y H:i:s'),
+                    'timestamp' => $registro->created_at->timestamp,
+                    'ip_origin' => $registro->ip_origin,
+                ];
+            });
+
+        // Acciones más frecuentes
+        $accionesFrequentes = AuditoriaOnboarding::select('accion', DB::raw('count(*) as total'))
+            ->groupBy('accion')
+            ->orderByDesc('total')
+            ->get();
+
+        // Entidades más modificadas
+        $entidadesModificadas = AuditoriaOnboarding::select('entidad', DB::raw('count(*) as total'))
+            ->groupBy('entidad')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'timestamp' => now()->timestamp,
+            'datos' => [
+                'totalRegistros' => $totalRegistros,
+                'registrosHoy' => $registrosHoy,
+                'registrosEstaSemanagento' => $registrosEstaSemanagento,
+                'registrosEsteMes' => $registrosEsteMes,
+                'ultimosRegistros' => $ultimosRegistros,
+                'accionesFrequentes' => $accionesFrequentes,
+                'entidadesModificadas' => $entidadesModificadas,
+            ]
+        ]);
+    }
 }
