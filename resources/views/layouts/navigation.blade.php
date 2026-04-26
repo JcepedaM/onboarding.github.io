@@ -6,9 +6,7 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}" class="flex items-center">
-                        <div style="color: #C59D42; font-weight: 700; font-size: 18px;">
-                            🏦 Sinergia Financiera
-                        </div>
+                        <img src="{{ asset('images/Logo-cropped.svg') }}" alt="Sinergia Financiera" style="height: 50px; width: auto;">
                     </a>
                 </div>
 
