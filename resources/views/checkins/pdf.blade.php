@@ -239,10 +239,6 @@ class="navbar"<!DOCTYPE html>
                     <td>{{ $checkin->procesoIngreso->area->nombre }}</td>
                 </tr>
                 <tr>
-                    <td class="info-label">Jefe Inmediato:</td>
-                    <td>{{ $checkin->procesoIngreso->jefeCargo?->nombre ?? $checkin->procesoIngreso->cargo?->jefeInmediato?->nombre ?? '—' }}</td>
-                </tr>
-                <tr>
                     <td class="info-label">Fecha de Ingreso:</td>
                     <td>{{ $checkin->procesoIngreso->fecha_ingreso }}</td>
                 </tr>
@@ -257,8 +253,7 @@ class="navbar"<!DOCTYPE html>
                     <tr>
                         <th style="width: 40%;">Ítem</th>
                         <th style="width: 35%;">Especificaciones</th>
-                        <th style="width: 15%;" class="centered">Estado</th>
-                        <th style="width: 10%;" class="centered">✓</th>
+                        <th style="width: 25%;" class="centered">Estado</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -271,9 +266,6 @@ class="navbar"<!DOCTYPE html>
                                     <span class="estado-badge estado-completado">
                                         Finalizado
                                     </span>
-                                </td>
-                                <td class="centered">
-                                    {{ ($activo['entregado'] ?? false) ? '✓' : '✗' }}
                                 </td>
                             </tr>
                         @endforeach
