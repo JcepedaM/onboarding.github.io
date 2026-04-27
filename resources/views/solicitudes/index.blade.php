@@ -60,69 +60,84 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($solicitudes as $solicitud)
-                        <tr class="border-b hover:bg-gray-50 @if($solicitud->fecha_limite < now()->addDays(3)) bg-red-50 @endif">
-                            <td class="px-4 py-3 font-bold text-sm">{{ $solicitud->proceso?->codigo ?? 'N/A' }}</td>
-                            <td class="px-4 py-3 text-sm">{{ $solicitud->proceso?->nombre_completo ?? 'Sin proceso' }}</td>
-                            <td class="px-4 py-3 text-sm">
-                                <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
-                                    {{ $solicitud->tipo }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-sm">{{ $solicitud->area->nombre }}</td>
-                            <td class="px-4 py-3 text-sm">
-                                <span class="@if($solicitud->fecha_limite < now()) text-red-600 font-bold @endif">
-                                    {{ $solicitud->fecha_limite->format('d/m/Y') }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-sm">
-                                <span class="px-3 py-1 rounded text-white text-xs font-bold
-                                    @if ($solicitud->estado === 'Pendiente') bg-yellow-500
-                                    @elseif ($solicitud->estado === 'En Proceso') bg-blue-500
-                                    @elseif ($solicitud->estado === 'Entregado') bg-green-500
-                                    @else bg-purple-500 @endif">
-                                    {{ $solicitud->estado }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-center text-sm flex justify-center gap-2">
-                                <a href="{{ route('solicitudes.show', $solicitud->id) }}" 
-                                   title="Ver detalles"
-                                   class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
-                                    👁️
-                                </a>
-                                
-                                {{-- Botón FINALIZAR TODO (solo Root y Jefe RRHH) --}}
-                                @if(auth()->user()->hasRole(['Root', 'Jefe RRHH']))
+                    @forelse ($solicitudes->groupBy('proceso_ingreso_id') as $proceso_ingreso_id => $grupo_solicitudes)
+                        <tr class="h-0 bg-transparent border-0">
+                            <td colspan="7" class="p-0">
+                                <div class="mb-4 @if($grupo_solicitudes->whereNotIn('estado', ['Finalizada', 'Completado'])->isNotEmpty()) border border-gray-200 rounded-lg shadow-sm overflow-hidden @else @endif">
+                                    <table class="w-full">
+                                        <tbody>
+                        @foreach ($grupo_solicitudes as $solicitud)
+                            <tr class="border-b hover:bg-gray-50 @if($solicitud->fecha_limite < now()->addDays(3)) bg-red-50 @endif">
+                                <td class="px-4 py-3 font-bold text-sm">{{ $solicitud->proceso?->codigo ?? 'N/A' }}</td>
+                                <td class="px-4 py-3 text-sm">{{ $solicitud->proceso?->nombre_completo ?? 'Sin proceso' }}</td>
+                                <td class="px-4 py-3 text-sm">
+                                    <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
+                                        {{ $solicitud->tipo }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm">{{ $solicitud->area->nombre }}</td>
+                                <td class="px-4 py-3 text-sm">
+                                    <span class="@if($solicitud->fecha_limite < now()) text-red-600 font-bold @endif">
+                                        {{ $solicitud->fecha_limite->format('d/m/Y') }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm">
+                                    <span class="px-3 py-1 rounded text-white text-xs font-bold
+                                        @if ($solicitud->estado === 'Pendiente') bg-yellow-500
+                                        @elseif ($solicitud->estado === 'En Proceso') bg-blue-500
+                                        @elseif ($solicitud->estado === 'Entregado') bg-green-500
+                                        @else bg-purple-500 @endif">
+                                        {{ $solicitud->estado }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-center text-sm flex justify-center gap-2">
+                                    <a href="{{ route('solicitudes.show', $solicitud->id) }}" 
+                                       title="Ver detalles"
+                                       class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                                        👁️
+                                    </a>
+                                    
+                                    @if($solicitud->estado === 'Pendiente')
+                                        <form method="POST" action="{{ route('solicitudes.cambiar-estado', $solicitud->id) }}" style="display: inline;">
+                                            @csrf
+                                            <input type="hidden" name="estado" value="En Proceso">
+                                            <button type="submit" title="Marcar como en proceso"
+                                                    class="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700">
+                                                ⏳
+                                            </button>
+                                        </form>
+                                    @elseif($solicitud->estado === 'En Proceso')
+                                        <form method="POST" action="{{ route('solicitudes.cambiar-estado', $solicitud->id) }}" style="display: inline;">
+                                            @csrf
+                                            <input type="hidden" name="estado" value="Entregado">
+                                            <button type="submit" title="Marcar como entregado"
+                                                    class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+                                                ✓
+                                            </button>
+                                        </form>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        
+                        {{-- Mostrar botón FINALIZAR TODO solo si hay procesos no finalizados --}}
+                        @if(auth()->user()->hasRole(['Root', 'Jefe RRHH']) && $grupo_solicitudes->whereNotIn('estado', ['Finalizada', 'Completado'])->isNotEmpty())
+                            <tr class="bg-red-50 border-t border-gray-200 hover:bg-red-100">
+                                <td colspan="7" class="px-4 py-4 text-center">
                                     <form method="POST" action="{{ route('solicitudes.finalizar-todas') }}" style="display: inline;" 
                                           onsubmit="return confirm('¿Estás seguro de que deseas finalizar TODAS las solicitudes de este proceso?');">
                                         @csrf
-                                        <input type="hidden" name="proceso_ingreso_id" value="{{ $solicitud->proceso_ingreso_id }}">
-                                        <button type="submit" title="Finalizar TODAS las solicitudes del proceso"
-                                                class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 font-bold">
+                                        <input type="hidden" name="proceso_ingreso_id" value="{{ $proceso_ingreso_id }}">
+                                        <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded text-sm hover:bg-red-700 font-bold">
                                             FINALIZAR TODO
                                         </button>
                                     </form>
-                                @endif
-                                
-                                @if($solicitud->estado === 'Pendiente')
-                                    <form method="POST" action="{{ route('solicitudes.cambiar-estado', $solicitud->id) }}" style="display: inline;">
-                                        @csrf
-                                        <input type="hidden" name="estado" value="En Proceso">
-                                        <button type="submit" title="Marcar como en proceso"
-                                                class="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700">
-                                            ⏳
-                                        </button>
-                                    </form>
-                                @elseif($solicitud->estado === 'En Proceso')
-                                    <form method="POST" action="{{ route('solicitudes.cambiar-estado', $solicitud->id) }}" style="display: inline;">
-                                        @csrf
-                                        <input type="hidden" name="estado" value="Entregado">
-                                        <button type="submit" title="Marcar como entregado"
-                                                class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
-                                            ✓
-                                        </button>
-                                    </form>
-                                @endif
+                                </td>
+                            </tr>
+                        @endif
+                                        </tbody>
+                                    </table>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -138,80 +153,86 @@
 
         {{-- Tarjetas de solicitudes (Mobile) --}}
         <div class="md:hidden space-y-4">
-            @forelse ($solicitudes as $solicitud)
-                <div class="bg-white rounded shadow p-4 border-l-4 
-                    @if ($solicitud->estado === 'Pendiente') border-yellow-500
-                    @elseif ($solicitud->estado === 'En Proceso') border-blue-500
-                    @elseif ($solicitud->estado === 'Entregado') border-green-500
-                    @else border-purple-500 @endif">
-                    
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <p class="font-bold text-lg text-gray-800">{{ $solicitud->proceso?->codigo ?? 'N/A' }}</p>
-                            <p class="text-sm text-gray-600">{{ $solicitud->proceso?->nombre_completo ?? 'Sin proceso' }}</p>
-                        </div>
-                        <span class="px-3 py-1 rounded text-white text-xs font-bold
-                            @if ($solicitud->estado === 'Pendiente') bg-yellow-500
-                            @elseif ($solicitud->estado === 'En Proceso') bg-blue-500
-                            @elseif ($solicitud->estado === 'Entregado') bg-green-500
-                            @else bg-purple-500 @endif">
-                            {{ $solicitud->estado }}
-                        </span>
-                    </div>
-                    
-                    <div class="space-y-2 mb-3 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Tipo:</span>
-                            <span class="font-semibold text-gray-800">{{ $solicitud->tipo }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Área:</span>
-                            <span class="font-semibold text-gray-800">{{ $solicitud->area->nombre }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Fecha Límite:</span>
-                            <span class="font-semibold @if($solicitud->fecha_limite < now()) text-red-600 font-bold @else text-gray-800 @endif">
-                                {{ $solicitud->fecha_limite->format('d/m/Y') }}
+            @forelse ($solicitudes->groupBy('proceso_ingreso_id') as $proceso_ingreso_id => $grupo_solicitudes)
+                <div class="mb-4 @if($grupo_solicitudes->whereNotIn('estado', ['Finalizada', 'Completado'])->isNotEmpty()) border border-gray-200 rounded-lg shadow-sm p-4 space-y-4 @else space-y-4 @endif">
+                @foreach ($grupo_solicitudes as $solicitud)
+                    <div class="bg-white rounded shadow p-4 border-l-4 
+                        @if ($solicitud->estado === 'Pendiente') border-yellow-500
+                        @elseif ($solicitud->estado === 'En Proceso') border-blue-500
+                        @elseif ($solicitud->estado === 'Entregado') border-green-500
+                        @else border-purple-500 @endif">
+                        
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="font-bold text-lg text-gray-800">{{ $solicitud->proceso?->codigo ?? 'N/A' }}</p>
+                                <p class="text-sm text-gray-600">{{ $solicitud->proceso?->nombre_completo ?? 'Sin proceso' }}</p>
+                            </div>
+                            <span class="px-3 py-1 rounded text-white text-xs font-bold
+                                @if ($solicitud->estado === 'Pendiente') bg-yellow-500
+                                @elseif ($solicitud->estado === 'En Proceso') bg-blue-500
+                                @elseif ($solicitud->estado === 'Entregado') bg-green-500
+                                @else bg-purple-500 @endif">
+                                {{ $solicitud->estado }}
                             </span>
                         </div>
-                    </div>
-                    
-                    <div class="flex gap-2">
-                        <a href="{{ route('solicitudes.show', $solicitud->id) }}" 
-                           class="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 text-center font-semibold">
-                            👁️ Ver
-                        </a>
                         
-                        {{-- Botón FINALIZAR TODO (solo Root y Jefe RRHH) --}}
-                        @if(auth()->user()->hasRole(['Root', 'Jefe RRHH']))
-                            <form method="POST" action="{{ route('solicitudes.finalizar-todas') }}" class="flex-1"
-                                  onsubmit="return confirm('¿Estás seguro de que deseas finalizar TODAS las solicitudes de este proceso?');">
-                                @csrf
-                                <input type="hidden" name="proceso_ingreso_id" value="{{ $solicitud->proceso_ingreso_id }}">
-                                <button type="submit" class="w-full bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 font-semibold">
-                                    FINALIZAR TODO
-                                </button>
-                            </form>
-                        @endif
+                        <div class="space-y-2 mb-3 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Tipo:</span>
+                                <span class="font-semibold text-gray-800">{{ $solicitud->tipo }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Área:</span>
+                                <span class="font-semibold text-gray-800">{{ $solicitud->area->nombre }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Fecha Límite:</span>
+                                <span class="font-semibold @if($solicitud->fecha_limite < now()) text-red-600 font-bold @else text-gray-800 @endif">
+                                    {{ $solicitud->fecha_limite->format('d/m/Y') }}
+                                </span>
+                            </div>
+                        </div>
                         
-                        @if($solicitud->estado === 'Pendiente')
-                            <form method="POST" action="{{ route('solicitudes.cambiar-estado', $solicitud->id) }}" class="flex-1">
-                                @csrf
-                                <input type="hidden" name="estado" value="En Proceso">
-                                <button type="submit" class="w-full bg-orange-600 text-white px-3 py-2 rounded text-sm hover:bg-orange-700 font-semibold">
-                                    ⏳ Procesar
-                                </button>
-                            </form>
-                        @elseif($solicitud->estado === 'En Proceso')
-                            <form method="POST" action="{{ route('solicitudes.cambiar-estado', $solicitud->id) }}" class="flex-1">
-                                @csrf
-                                <input type="hidden" name="estado" value="Entregado">
-                                <button type="submit" class="w-full bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 font-semibold">
-                                    ✓ Entregar
-                                </button>
-                            </form>
-                        @endif
+                        <div class="flex gap-2">
+                            <a href="{{ route('solicitudes.show', $solicitud->id) }}" 
+                               class="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 text-center font-semibold">
+                                👁️ Ver
+                            </a>
+                            
+                            @if($solicitud->estado === 'Pendiente')
+                                <form method="POST" action="{{ route('solicitudes.cambiar-estado', $solicitud->id) }}" class="flex-1">
+                                    @csrf
+                                    <input type="hidden" name="estado" value="En Proceso">
+                                    <button type="submit" class="w-full bg-orange-600 text-white px-3 py-2 rounded text-sm hover:bg-orange-700 font-semibold">
+                                        ⏳ Procesar
+                                    </button>
+                                </form>
+                            @elseif($solicitud->estado === 'En Proceso')
+                                <form method="POST" action="{{ route('solicitudes.cambiar-estado', $solicitud->id) }}" class="flex-1">
+                                    @csrf
+                                    <input type="hidden" name="estado" value="Entregado">
+                                    <button type="submit" class="w-full bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 font-semibold">
+                                        ✓ Entregar
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
                     </div>
+                @endforeach
+                
+                {{-- Mostrar botón FINALIZAR TODO solo si hay procesos no finalizados --}}
+                @if(auth()->user()->hasRole(['Root', 'Jefe RRHH']) && $grupo_solicitudes->whereNotIn('estado', ['Finalizada', 'Completado'])->isNotEmpty())
+                    <div class="bg-red-50 rounded shadow p-4 text-center border-t border-gray-200 mt-2">
+                        <form method="POST" action="{{ route('solicitudes.finalizar-todas') }}"
+                              onsubmit="return confirm('¿Estás seguro de que deseas finalizar TODAS las solicitudes de este proceso?');">
+                            @csrf
+                            <input type="hidden" name="proceso_ingreso_id" value="{{ $proceso_ingreso_id }}">
+                            <button type="submit" class="w-full bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700 font-bold">
+                                FINALIZAR TODO
+                            </button>
+                        </form>
+                    </div>
+                @endif
                 </div>
             @empty
                 <div class="bg-white rounded shadow p-6 text-center text-gray-500">
