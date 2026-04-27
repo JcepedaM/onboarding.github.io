@@ -15,24 +15,35 @@ class SolicitudController extends Controller
     /**
      * Listar solicitudes según el rol del usuario
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
         $baseQuery = Solicitud::whereHas('proceso', function ($query) {
             $query->where('estado', '!=', 'Cancelado');
         });
+
+        // Obtener parámetro area_id del query string (del email)
+        $areaId = $request->query('area_id');
         
         // Root ve todas las solicitudes
         if ($user->hasRole('Root')) {
-            $solicitudes = $baseQuery->with(['proceso', 'area', 'detalleTecnologia', 'detalleUniforme', 'detalleBienes', 'puestoTrabajo', 'cursos'])
-                ->latest()
-                ->paginate(15);
+            $solicitudes = $baseQuery->with(['proceso', 'area', 'detalleTecnologia', 'detalleUniforme', 'detalleBienes', 'puestoTrabajo', 'cursos']);
+            
+            if ($areaId) {
+                $solicitudes = $solicitudes->where('area_id', $areaId);
+            }
+            
+            $solicitudes = $solicitudes->latest()->paginate(15);
         }
         // Jefe RRHH ve todas las solicitudes (gestiona todo el onboarding)
         elseif ($user->hasRole('Jefe RRHH')) {
-            $solicitudes = $baseQuery->with(['proceso', 'area', 'detalleTecnologia', 'detalleUniforme', 'detalleBienes', 'puestoTrabajo', 'cursos'])
-                ->latest()
-                ->paginate(15);
+            $solicitudes = $baseQuery->with(['proceso', 'area', 'detalleTecnologia', 'detalleUniforme', 'detalleBienes', 'puestoTrabajo', 'cursos']);
+            
+            if ($areaId) {
+                $solicitudes = $solicitudes->where('area_id', $areaId);
+            }
+            
+            $solicitudes = $solicitudes->latest()->paginate(15);
         }
         // Jefe Tecnología ve SOLO solicitudes de Tecnología
         elseif ($user->hasRole('Jefe Tecnología')) {
