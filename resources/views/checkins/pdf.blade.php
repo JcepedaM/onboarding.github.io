@@ -164,9 +164,9 @@ class="navbar"<!DOCTYPE html>
         
         .linea-firma {
             border-top: 1px solid #333;
-            padding-top: 8px;
+            padding-top: 4px;
             font-weight: bold;
-            margin-top: 50px;
+            margin-top: 8px;
         }
         
         .estado-badge {
@@ -302,7 +302,7 @@ class="navbar"<!DOCTYPE html>
         <!-- Sección 4: Firmas -->
         <div class="firma-section">
             <div class="firma-item">
-                <div style="height: 80px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999;">
+                <div style="height: 40px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999;">
                     @if ($checkin->firma_digital)
                         [Firma Digital Registrada]
                     @else
